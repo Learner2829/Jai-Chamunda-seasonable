@@ -32,5 +32,5 @@ This system allows administrators to track high-value customer interactions, dyn
 
 1. **Clone the repository**
    ```bash
-   git clone [https://github.com/yourusername/Jai-Chamunda-seasonable.git](https://github.com/yourusername/Jai-Chamunda-seasonable.git)
+   git clone [https://github.com/Learner2829/Jai-Chamunda-seasonable.git](https://github.com/Learner2829/Jai-Chamunda-seasonable.git)
    cd Jai-Chamunda-seasonable
