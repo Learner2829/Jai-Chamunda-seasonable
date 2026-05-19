@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Customer List - {{ shop_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-users"></i> Registered Customers</h2>
+            <p class="text-muted">View all customers, their card activity, and visit history.</p>
+        </div>
+        <a href="{{ url_for('download_users_pdf') }}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-file-pdf"></i> Download Report
+        </a>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="py-3 ps-4">Joined Date</th>
+                            <th class="py-3">Customer Name</th>
+                            <th class="py-3">Contact Info</th>
+                            <th class="py-3">Card Details</th>
+                            <th class="py-3 text-center">Stats</th>
+                            <th class="py-3 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for user in users %}
+                            <tr>
+                                <td class="ps-4 text-muted small">
+                                    {{ user[5].strftime('%Y-%m-%d') }}
+                                </td>
+                                
+                                <td>
+                                    <div class="fw-bold text-dark">{{ user[1] }}</div>
+                                    <div class="small text-muted">
+                                        <i class="fas fa-map-marker-alt text-danger me-1"></i> 
+                                        {{ user[3] or 'No Address' }}
+                                    </div>
+                                </td>
+                                
+                                <td>
+                                    <div class="text-muted"><i class="fas fa-envelope me-1"></i> {{ user[2] }}</div>
+                                    <div class="small text-muted mt-1"><i class="fas fa-phone me-1"></i> {{ user[4] or 'N/A' }}</div>
+                                </td>
+
+                                <td>
+                                    {% if user[6] %}
+                                        <span class="badge bg-primary text-white p-2 shadow-sm">
+                                            <i class="fas fa-barcode me-1"></i> {{ user[6] }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No Card Linked</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="fw-bold fs-6">{{ user[7] }} Visits</div>
+                                    <div class="text-success fw-bold small">
+                                        Saved: ₹{{ user[8] }}
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#historyModal{{ user[0] }}">
+                                        <i class="fas fa-history me-1"></i> View History
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-user-slash fa-3x mb-3 opacity-50"></i>
+                                        <p class="mb-0">No customers found in the database.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if users %}
+    {% for user in users %}
+    <div class="modal fade" id="historyModal{{ user[0] }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="fas fa-history text-primary me-2"></i>
+                        Visit History: <span class="fw-bold">{{ user[1] }}</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body bg-white">
+                    
+                    {% if visits_by_user and visits_by_user[user[0]] %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead class="bg-secondary text-white small">
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Product / Service</th>
+                                        <th class="text-end">Bill Amount</th>
+                                        <th class="text-end">Discount Given</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for visit in visits_by_user[user[0]] %}
+                                    <tr>
+                                        <td class="small">{{ visit[1].strftime('%d-%m-%Y %I:%M %p') }}</td>
+                                        <td>{{ visit[2] }}</td>
+                                        <td class="text-end fw-bold">₹{{ visit[3] }}</td>
+                                        <td class="text-end text-success fw-bold">- ₹{{ visit[4] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-basket fa-3x text-muted mb-3 opacity-50"></i>
+                            <p class="text-muted">No shopping history found for this customer.</p>
+                        </div>
+                    {% endif %}
+
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}

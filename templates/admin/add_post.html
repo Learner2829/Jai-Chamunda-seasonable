@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}<h3>Add Post</h3><form method="POST" enctype="multipart/form-data">
+<input type="text" name="title" class="form-control mb-2" placeholder="Title" required>
+<textarea name="description" class="form-control mb-2" placeholder="Desc" required></textarea>
+<input type="number" name="discount" class="form-control mb-2" placeholder="Discount %">
+<input type="file" name="image" class="form-control mb-2">
+<button class="btn btn-success">Save</button></form>{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Card - {{ shop_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-barcode"></i> Scan Customer Card (QR & Barcode)
+                </h4>
+            </div>
+            <div class="card-body">
+                
+                <div class="mb-4 text-center">
+                    <div id="reader" style="width: 100%; max-width: 600px; margin: 0 auto; display:none;"></div>
+                    <div id="camera-controls" class="mt-2">
+                        <button onclick="startScanner()" class="btn btn-primary" id="start-btn">
+                            <i class="fas fa-camera"></i> Open Scanner
+                        </button>
+                        <button onclick="stopScanner()" class="btn btn-danger" id="stop-btn" style="display:none;">
+                            <i class="fas fa-stop"></i> Stop Scanner
+                        </button>
+                    </div>
+                    <div id="scan-status" class="mt-2 text-success fw-bold"></div>
+                    <small class="text-muted">Supports: QR Code, Code 128 (Barcodes)</small>
+                </div>
+
+                <form method="POST" action="{{ url_for('scan_card') }}">
+                    <div class="mb-3">
+                        <label for="card_number" class="form-label">Card Number</label>
+                        <input type="text" class="form-control form-control-lg text-center fw-bold" 
+                               id="card_number" name="card_number" 
+                               placeholder="Scan Barcode or Enter 12-digit number" 
+                               pattern="[0-9]{12}" required>
+                        <div class="form-text">The scanner will auto-fill this field.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="product_info" class="form-label">Product Information</label>
+                        <textarea class="form-control" id="product_info" name="product_info" 
+                                  rows="2" placeholder="Enter products purchased or services availed" required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="total_amount" class="form-label fw-bold">Total Bill Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control" id="total_amount" name="total_amount" 
+                                       min="0" step="0.01" required oninput="calculateSavings()">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="discount" class="form-label fw-bold">Discount Percentage (%)</label>
+                            <input type="number" class="form-control" id="discount" name="discount" 
+                                   min="0" max="100" step="0.01" value="0" required oninput="calculateSavings()">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success text-center" id="savings-alert" style="display:none;">
+                        <strong>Customer Saves: </strong> ₹<span id="savings-display">0.00</span>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning btn-lg">
+                            <i class="fas fa-check-circle"></i> Record Visit & Apply Discount
+                        </button>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+    // --- CALCULATION LOGIC ---
+    function calculateSavings() {
+        const amount = parseFloat(document.getElementById('total_amount').value) || 0;
+        const percent = parseFloat(document.getElementById('discount').value) || 0;
+        
+        const savings = (amount * percent) / 100;
+        
+        const display = document.getElementById('savings-display');
+        const alertBox = document.getElementById('savings-alert');
+        
+        display.innerText = savings.toFixed(2);
+        
+        if(savings > 0) {
+            alertBox.style.display = 'block';
+        } else {
+            alertBox.style.display = 'none';
+        }
+    }
+
+    // --- SCANNER LOGIC ---
+    let html5QrcodeScanner = null;
+
+    function onScanSuccess(decodedText, decodedResult) {
+        console.log(`Scan result: ${decodedText}`, decodedResult);
+        document.getElementById('card_number').value = decodedText;
+        document.getElementById('scan-status').innerText = "Success! Scanned: " + decodedText;
+        stopScanner();
+        document.getElementById('product_info').focus();
+    }
+
+    function onScanFailure(error) {
+        // handle scan failure
+    }
+
+    function startScanner() {
+        document.getElementById('reader').style.display = 'block';
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('stop-btn').style.display = 'inline-block';
+        document.getElementById('scan-status').innerText = "Scanning... hold steady.";
+
+        html5QrcodeScanner = new Html5Qrcode("reader");
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 300, height: 150 },
+            formatsToSupport: [ 
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.EAN_13
+            ]
+        };
+        
+        html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+        .catch(err => {
+            console.log("Error starting scanner", err);
+            alert("Error starting camera. Please ensure you gave permission.");
+        });
+    }
+
+    function stopScanner() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then((ignore) => {
+                document.getElementById('reader').style.display = 'none';
+                document.getElementById('start-btn').style.display = 'inline-block';
+                document.getElementById('stop-btn').style.display = 'none';
+            }).catch((err) => {
+                console.log("Stop failed: ", err);
+            });
+        }
+    }
+</script>
+
+{% endblock %}

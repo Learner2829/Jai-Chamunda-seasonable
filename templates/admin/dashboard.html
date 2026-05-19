@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Admin Dashboard</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white p-3 shadow-sm">
+                <h3>{{ total_users }}</h3>
+                <span>Total Users</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white p-3 shadow-sm">
+                <h3>{{ total_posts }}</h3>
+                <span>Active Posts</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white p-3 shadow-sm">
+                <h3>{{ total_cards }}</h3>
+                <span>Issued Cards</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark p-3 shadow-sm">
+                <h3>{{ today_visits }}</h3>
+                <span>Visits Today</span>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="text-muted">General Management</h5>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <a href="{{ url_for('add_post') }}" class="btn btn-primary w-100 p-3">
+                Add New Offer Post
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_users') }}" class="btn btn-warning w-100 p-3">
+                View All Users
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('download_users_pdf') }}" class="btn btn-secondary w-100 p-3">
+                Download User Report (PDF)
+            </a>
+        </div>
+    </div>
+
+    <h5 class="text-muted">Card System</h5>
+    <div class="row">
+        <div class="col-md-4">
+            <a href="{{ url_for('create_card') }}" class="btn btn-success w-100 p-3">
+                Generate Digital Card
+            </a>
+        </div>
+        
+        <div class="col-md-4">
+            <a href="{{ url_for('connect_card') }}" class="btn btn-dark w-100 p-3 border border-light">
+                Connect Physical Card
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{{ url_for('scan_card') }}" class="btn btn-info w-100 p-3">
+                Scan Customer Visit
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

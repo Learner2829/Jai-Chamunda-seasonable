@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<div class="container mt-4">
+    
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-link"></i> Connect Card System</h2>
+            <p class="text-muted">Scan a pre-printed card to assign it to a new customer.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <form action="{{ url_for('generate_empty_card') }}" method="POST">
+                <button type="submit" class="btn btn-warning shadow">
+                    <i class="fas fa-print"></i> Generate New Empty Card
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Assign Card to Customer</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('connect_card') }}" method="POST" id="connectForm">
+                        
+                        <div class="mb-4 bg-light p-3 border rounded">
+                            <label for="card_number" class="form-label fw-bold">Step 1: Identify Card</label>
+                            
+                            <div id="reader" style="width: 100%; display: none;" class="mb-3 border border-primary rounded"></div>
+
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control form-control-lg text-center" 
+                                       id="card_number" name="card_number" 
+                                       placeholder="Scan Barcode..." 
+                                       required autofocus autocomplete="off">
+                                <button class="btn btn-outline-secondary" type="button" id="cameraToggleBtn" onclick="toggleCamera()">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            
+                            <select class="form-select" onchange="document.getElementById('card_number').value = this.value">
+                                <option value="">-- Or Select from Inventory --</option>
+                                {% if empty_cards %}
+                                    {% for card in empty_cards %}
+                                        <option value="{{ card[0] }}">Card #{{ card[0] }} (Unassigned)</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option disabled>No empty cards available</option>
+                                {% endif %}
+                            </select>
+                        </div>
+
+                        <hr>
+
+                        <h5 class="mb-3">Step 2: Customer Details</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" name="name" id="nameInput" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" name="phone">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" name="address" rows="2" required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 btn-lg">
+                            <i class="fas fa-check-circle"></i> Connect & Activate
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card bg-light border-warning shadow-sm">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0 text-warning-emphasis">Card Inventory</h5>
+                                <small class="text-muted">Pre-printed cards waiting for customers</small>
+                            </div>
+                            <h2 class="mb-0 fw-bold">{{ empty_cards|length }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Recently Connected</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Card #</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if recent_connections %}
+                                    {% for card in recent_connections %}
+                                    <tr>
+                                        <td class="fw-bold text-primary">{{ card[0] }}</td>
+                                        <td>{{ card[1] }}</td>
+                                        <td>{{ card[2] }}</td>
+                                        <td><small class="text-muted">{{ card[3].strftime('%d-%m %H:%M') }}</small></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            No cards connected recently.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Existing Logic for Handheld Scanners ---
+    // Prevents 'Enter' key from submitting the form when in the Card Number box.
+    document.getElementById('card_number').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Stop form submission
+            document.getElementById('nameInput').focus(); // Move to Name field
+        }
+    });
+
+    // --- 2. Live Camera Logic ---
+    let html5QrcodeScanner = null;
+    const readerDiv = document.getElementById('reader');
+    const toggleBtn = document.getElementById('cameraToggleBtn');
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // handle the scanned code as you like, for example:
+        console.log(`Code matched = ${decodedText}`, decodedResult);
+        
+        // 1. Fill the input
+        document.getElementById('card_number').value = decodedText;
+        
+        // 2. Stop scanning
+        toggleCamera(); 
+
+        // 3. Move focus to Name input (same UX as handheld scanner)
+        document.getElementById('nameInput').focus();
+    }
+
+    function onScanFailure(error) {
+        // handle scan failure, usually better to ignore and keep scanning.
+        // for example:
+        // console.warn(`Code scan error = ${error}`);
+    }
+
+    function toggleCamera() {
+        if (html5QrcodeScanner) {
+            // If scanner is active, stop it
+            html5QrcodeScanner.clear().then(_ => {
+                html5QrcodeScanner = null;
+                readerDiv.style.display = "none";
+                toggleBtn.classList.remove('btn-danger');
+                toggleBtn.classList.add('btn-outline-secondary');
+                toggleBtn.innerHTML = '<i class="fas fa-camera"></i>';
+            }).catch(error => {
+                console.error("Failed to clear html5QrcodeScanner. ", error);
+            });
+        } else {
+            // If scanner is inactive, start it
+            readerDiv.style.display = "block";
+            toggleBtn.classList.remove('btn-outline-secondary');
+            toggleBtn.classList.add('btn-danger');
+            toggleBtn.innerHTML = '<i class="fas fa-times"></i>'; // Change icon to 'X'
+
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", 
+                { fps: 10, qrbox: {width: 250, height: 150} }, // Rectangular box for barcodes
+                /* verbose= */ false
+            );
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+    }
+</script>
+{% endblock %}

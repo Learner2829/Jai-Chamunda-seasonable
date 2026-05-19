@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Adjust Card Layout{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-sliders-h"></i> Adjust Layout</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <h6 class="text-muted border-bottom pb-2">Front Side: Card Number</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">X Position (Left/Right)</label>
+                            <input type="range" class="form-range" min="0" max="1000" 
+                                   value="{{ settings.front_num_x }}" name="front_num_x" 
+                                   oninput="this.nextElementSibling.value = this.value">
+                            <output>{{ settings.front_num_x }}</output> px
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Y Position (Up/Down)</label>
+                            <input type="range" class="form-range" min="0" max="630" 
+                                   value="{{ settings.front_num_y }}" name="front_num_y" 
+                                   oninput="this.nextElementSibling.value = this.value">
+                            <output>{{ settings.front_num_y }}</output> px
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Font Size</label>
+                            <input type="number" class="form-control" name="front_font_size" 
+                                   value="{{ settings.front_font_size }}">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Save & Refresh Preview
+                            </button>
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Live Preview (Front)</h5>
+                </div>
+                <div class="card-body text-center bg-light">
+                    <img src="{{ url_for('card_preview') }}?t={{ range(1, 10000) | random }}" 
+                         class="img-fluid border rounded shadow-sm" 
+                         style="max-width: 100%; height: auto;" 
+                         alt="Card Preview">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

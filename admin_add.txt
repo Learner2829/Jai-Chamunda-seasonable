@@ -1,0 +1,12 @@
+from werkzeug.security import generate_password_hash
+print(generate_password_hash("MyStrongPassword@123"))
+
+
+INSERT INTO users
+(email, password, name, is_admin, email_verified)
+VALUES
+('mahendarnaran@gmail.com',
+ 'scrypt:32768:8:1$df9rM0wwkQxsdcN4$9ee408e0e588b171b1005f31dfae0c45cf02d623b800554f1ce6f1c1ef2d3573bf6c8b618e345fb52bf571db97f8d3c84d26aa66be23b1ed2e56c95735706a56',
+ 'Admin',
+ TRUE,
+ TRUE);

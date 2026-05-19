@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}<h1>All Products</h1><div class="row">
+{% for post in posts %}<div class="col-md-6 mb-4"><div class="card h-100"><div class="card-body">
+<h5>{{ post[1] }}</h5><p>{{ post[2] }}</p><b>${{ post[4] }} Discount</b>
+</div></div></div>{% endfor %}</div>{% endblock %}
